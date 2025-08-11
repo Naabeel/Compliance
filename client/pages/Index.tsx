@@ -52,7 +52,7 @@ type AppState = "landing" | "search" | "details" | "screening" | "results";
 
 export default function Index() {
   // State management
-  const [currentState, setCurrentState] = useState<AppState>("search");
+  const [currentState, setCurrentState] = useState<AppState>("landing");
   const [nmId, setNmId] = useState("");
   const [networkMember, setNetworkMember] = useState<NetworkMember | null>(
     null,
