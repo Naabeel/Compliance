@@ -353,26 +353,26 @@ export default function Index() {
                     </div>
 
                     {/* Action Buttons in Summary */}
-                    <div className="flex space-x-4 pt-4 border-t">
-                      <Button 
-                        variant="outline" 
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t">
+                      <Button
+                        variant="outline"
                         onClick={() => setShowQueries(!showQueries)}
-                        className="flex items-center space-x-2"
+                        className="flex items-center justify-center space-x-2 text-sm"
                       >
                         <Search className="h-4 w-4" />
                         <span>View Generated Queries</span>
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => setShowCitations(!showCitations)}
-                        className="flex items-center space-x-2"
+                        className="flex items-center justify-center space-x-2 text-sm"
                       >
                         <ExternalLink className="h-4 w-4" />
                         <span>View Citations</span>
                       </Button>
-                      <Button 
+                      <Button
                         onClick={handleStartConversation}
-                        className="bg-compliance-header hover:bg-compliance-accent text-white"
+                        className="bg-compliance-header hover:bg-compliance-accent text-white text-sm"
                       >
                         Start a Conversation
                       </Button>
