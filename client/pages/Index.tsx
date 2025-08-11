@@ -645,13 +645,17 @@ export default function Index() {
                   placeholder="Type your question..."
                   onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
                 />
-                <Button 
+                <Button
                   onClick={sendChatMessage}
-                  disabled={!chatInput.trim()}
+                  disabled={!chatInput.trim() || loadingChat}
                   size="sm"
                   className="bg-compliance-header hover:bg-compliance-accent"
                 >
-                  <Send className="h-4 w-4" />
+                  {loadingChat ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
