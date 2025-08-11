@@ -159,7 +159,7 @@ export default function Index() {
   const loadQueries = async () => {
     if (!nmId) return;
 
-    setLoading(true);
+    setLoadingQueries(true);
     setError('');
 
     try {
@@ -180,7 +180,7 @@ export default function Index() {
       console.error('Load queries error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load queries');
     } finally {
-      setLoading(false);
+      setLoadingQueries(false);
     }
   };
 
