@@ -156,14 +156,29 @@ export default function Index() {
 
   const loadQueries = async () => {
     if (!nmId) return;
-    
+
+    setLoading(true);
+    setError('');
+
     try {
-      const response = await fetch(`/api/queries/${nmId}`);
+      // Add timestamp to prevent caching
+      const response = await fetch(`/api/queries/${nmId}?t=${Date.now()}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to load queries: ${response.statusText}`);
+      }
+
       const data = await response.json();
+      console.log('Queries API Response:', data); // Debug log
+
+      // Display all queries from response
       setQueries(data.queries || []);
       setShowQueries(true);
     } catch (err) {
-      setError('Failed to load queries');
+      console.error('Load queries error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load queries');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -425,9 +440,12 @@ export default function Index() {
                     <Search className="h-4 w-4" />
                     <span>View Queries</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowCitations(!showCitations)}
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      // Always show citations from current screening results
+                      setShowCitations(!showCitations);
+                    }}
                     className="flex items-center justify-center space-x-2"
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -443,28 +461,39 @@ export default function Index() {
                 </div>
 
                 {/* Citations */}
-                {showCitations && (
+                {showCitations && screeningStatus?.results?.citations && (
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Citations</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle>Citations ({screeningStatus.results.citations.length})</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowCitations(false)}
+                      >
+                        ×
+                      </Button>
                     </CardHeader>
                     <CardContent>
                       <ScrollArea className="h-64">
                         <div className="space-y-2">
                           {screeningStatus.results.citations.map((citation, index) => (
-                            <div key={index} className="p-2 bg-gray-50 rounded">
-                              <a 
-                                href={citation} 
-                                className="text-sm text-compliance-accent hover:underline flex items-center"
+                            <div key={index} className="p-3 bg-gray-50 rounded border">
+                              <div className="text-xs text-gray-500 mb-1">Citation {index + 1}</div>
+                              <a
+                                href={citation}
+                                className="text-sm text-compliance-accent hover:underline flex items-center break-all"
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                • {citation} <ExternalLink className="h-3 w-3 ml-1" />
+                                {citation} <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
                               </a>
                             </div>
                           ))}
                         </div>
                       </ScrollArea>
+                      <div className="mt-4 text-xs text-gray-500">
+                        Total citations: {screeningStatus.results.citations.length}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -472,22 +501,35 @@ export default function Index() {
                 {/* Queries */}
                 {showQueries && (
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Generated Queries</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle>Generated Queries ({queries.length})</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowQueries(false)}
+                      >
+                        ×
+                      </Button>
                     </CardHeader>
                     <CardContent>
                       <ScrollArea className="h-64">
                         <div className="space-y-2">
                           {queries.map((query, index) => (
-                            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                              <span className="text-sm">• {query}</span>
-                              <Button variant="outline" size="sm">
+                            <div key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded border">
+                              <div className="flex-1">
+                                <div className="text-xs text-gray-500 mb-1">Query {index + 1}</div>
+                                <span className="text-sm break-words">{query}</span>
+                              </div>
+                              <Button variant="outline" size="sm" className="ml-2 flex-shrink-0">
                                 <Edit className="h-3 w-3" />
                               </Button>
                             </div>
                           ))}
                         </div>
                       </ScrollArea>
+                      <div className="mt-4 text-xs text-gray-500">
+                        Total queries: {queries.length} | Click 'Edit' to modify queries (functionality coming soon)
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -498,10 +540,27 @@ export default function Index() {
                     <CardTitle>Screening Summary</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div 
-                      className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: screeningStatus.results.summary }}
-                    />
+                    {screeningStatus?.results?.summary ? (
+                      <div className="space-y-4">
+                        <div
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: screeningStatus.results.summary }}
+                        />
+                        <div className="mt-6 pt-4 border-t bg-gray-50 p-4 rounded">
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div><strong>Summary Length:</strong> {screeningStatus.results.summary.length} characters</div>
+                            <div><strong>Citations Available:</strong> {screeningStatus.results.citations?.length || 0}</div>
+                            <div><strong>Screening Status:</strong> {screeningStatus.status}</div>
+                            <div><strong>Network Member ID:</strong> {screeningStatus.nm_id}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">
+                        <p>No summary data available</p>
+                        <p className="text-xs mt-2">This may indicate an issue with the API response</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
