@@ -61,18 +61,30 @@ const mockScreeningResults = {
         <div>
           <h3 class="font-semibold text-green-800 mb-2">No Negative News or Legal Issues Found</h3>
           <p class="text-sm text-green-700 mb-4">
-            After a comprehensive review of public records, news databases, and legal sources, there is no evidence of any lawsuits, 
-            controversies, scandals, or legal issues involving this Network Member. Searches covered all known professional tenures 
-            and industry positions.
+            After a comprehensive review of public records, news databases, and legal sources, there is no evidence of any lawsuits,
+            controversies, scandals, or legal issues involving this Network Member. Searches covered all known professional tenures
+            and industry positions including CraftMark Bakery LLC, Diamond Crystal Brands, and Rialto Banking Company.
           </p>
           <p class="text-sm text-green-700 mb-4">
-            All sources confirm that the Network Member has maintained a professional reputation, with no public reports of criminal activity, 
-            malpractice, fraud, employee lawsuits, or any other negative incidents associated with their name.
+            All sources confirm that the Network Member has maintained a professional reputation, with no public reports of criminal activity,
+            malpractice, fraud, employee lawsuits, or any other negative incidents associated with their name. The screening process
+            examined over 150 news sources, legal databases, and regulatory filings.
           </p>
+          <div class="bg-white border border-green-200 rounded p-3 mb-4">
+            <p class="text-sm font-medium text-green-800 mb-2">Detailed Findings:</p>
+            <ul class="text-sm text-green-700 list-disc list-inside space-y-1">
+              <li>No criminal records found in federal or state databases</li>
+              <li>No civil litigation as defendant in the past 10 years</li>
+              <li>No regulatory violations or sanctions</li>
+              <li>No negative media coverage or scandals</li>
+              <li>No bankruptcy filings or financial misconduct</li>
+            </ul>
+          </div>
           <div class="bg-white border border-green-200 rounded p-3">
             <p class="text-sm font-medium text-green-800 mb-2">Conclusion:</p>
             <p class="text-sm text-green-700">
               Extensive searches across multiple reputable sources revealed no negative news, legal actions, or controversies.
+              The Network Member appears to have a clean professional record with no compliance concerns identified.
             </p>
           </div>
         </div>
@@ -80,12 +92,18 @@ const mockScreeningResults = {
     </div>
   `,
   citations: [
-    "https://www.beverage-secretions.com/tag/?utm_source=copilot",
-    "https://www.beverage.co.uk/newsector/10-43-33072?utm_source=copilot", 
-    "https://www.dailymail.co.uk/news/article-4450172?utm_source=copilot",
-    "https://case-law.vlex.com/vid/685221107?utm_source=copilot",
-    "https://finance.yahoo.com/news/diamond-crystal-brands-announces?utm_source=copilot",
-    "https://naamloosc.com/name-parties-explained-attorney?utm_source=copilot"
+    "https://www.beverage-secretions.com/tag/executive-news?utm_source=compliance_search",
+    "https://www.beverage.co.uk/newsector/food-beverage-executives-2023?utm_source=compliance_search",
+    "https://www.dailymail.co.uk/news/business/food-industry-leaders?utm_source=compliance_search",
+    "https://case-law.vlex.com/vid/executive-litigation-search-685221107?utm_source=compliance_search",
+    "https://finance.yahoo.com/news/diamond-crystal-brands-leadership-announcements?utm_source=compliance_search",
+    "https://www.sec.gov/edgar/search/?q=diamond+crystal+brands&utm_source=compliance_search",
+    "https://www.courtlistener.com/search/?q=michael+bartikoski&utm_source=compliance_search",
+    "https://www.bloomberg.com/search?query=craftmark+bakery+executives&utm_source=compliance_search",
+    "https://www.reuters.com/business/retail-consumer/food-beverage-industry-news/?utm_source=compliance_search",
+    "https://www.wsj.com/search?query=food+industry+executives&utm_source=compliance_search",
+    "https://www.ftc.gov/enforcement/cases-proceedings/search?combine=food+beverage&utm_source=compliance_search",
+    "https://www.justice.gov/search/site/food%20industry%20executives?utm_source=compliance_search"
   ]
 };
 
