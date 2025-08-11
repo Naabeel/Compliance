@@ -73,16 +73,17 @@ export default function Index() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-compliance-header text-compliance-header-foreground shadow-sm">
-        <div className="px-6 py-4">
+        <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Click to go back, hold to see history
+            <div className="flex items-center space-x-2 lg:space-x-4">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 text-xs lg:text-sm">
+                <ArrowLeft className="h-4 w-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Click to go back, hold to see history</span>
+                <span className="sm:hidden">Back</span>
               </Button>
             </div>
-            <h1 className="text-xl font-semibold">Negative News Screening Agent</h1>
-            <div className="w-32"></div> {/* Spacer for balance */}
+            <h1 className="text-lg lg:text-xl font-semibold text-center">Negative News Screening Agent</h1>
+            <div className="w-16 lg:w-32"></div> {/* Spacer for balance */}
           </div>
         </div>
       </header>
@@ -162,26 +163,29 @@ export default function Index() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 lg:p-6">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl font-semibold text-compliance-header mb-6">
+            <h2 className="text-xl lg:text-2xl font-semibold text-compliance-header mb-4 lg:mb-6">
               Screening Results for {networkMemberData.name}
             </h2>
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="identity" className="flex items-center space-x-2">
-                  <UserCheck className="h-4 w-4" />
-                  <span>Identity Verification</span>
+                <TabsTrigger value="identity" className="flex items-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
+                  <UserCheck className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Identity Verification</span>
+                  <span className="sm:hidden">Identity</span>
                 </TabsTrigger>
-                <TabsTrigger value="work-history" className="flex items-center space-x-2">
-                  <FileText className="h-4 w-4" />
-                  <span>Work History</span>
+                <TabsTrigger value="work-history" className="flex items-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
+                  <FileText className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Work History</span>
+                  <span className="sm:hidden">Work</span>
                 </TabsTrigger>
-                <TabsTrigger value="negative-news" className="flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span>Negative News</span>
+                <TabsTrigger value="negative-news" className="flex items-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
+                  <AlertTriangle className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">Negative News</span>
+                  <span className="sm:hidden">News</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -224,26 +228,26 @@ export default function Index() {
               {/* Negative News Tab */}
               <TabsContent value="negative-news" className="space-y-6">
                 {/* Action Buttons */}
-                <div className="flex space-x-4">
-                  <Button 
-                    variant="outline" 
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                  <Button
+                    variant="outline"
                     onClick={() => setShowQueries(!showQueries)}
-                    className="flex items-center space-x-2"
+                    className="flex items-center justify-center space-x-2 text-sm"
                   >
                     <Search className="h-4 w-4" />
                     <span>View Generated Queries</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setShowCitations(!showCitations)}
-                    className="flex items-center space-x-2"
+                    className="flex items-center justify-center space-x-2 text-sm"
                   >
                     <ExternalLink className="h-4 w-4" />
                     <span>View Citations</span>
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleStartConversation}
-                    className="bg-compliance-header hover:bg-compliance-accent text-white"
+                    className="bg-compliance-header hover:bg-compliance-accent text-white text-sm"
                   >
                     Start a Conversation
                   </Button>
