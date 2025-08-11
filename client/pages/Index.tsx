@@ -452,18 +452,22 @@ export default function Index() {
 
                 {/* Action Buttons - Single Set */}
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={loadQueries}
+                    disabled={loadingQueries}
                     className="flex items-center justify-center space-x-2"
                   >
-                    <Search className="h-4 w-4" />
-                    <span>View Queries</span>
+                    {loadingQueries ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                    <span>{loadingQueries ? 'Loading...' : 'View Queries'}</span>
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => {
-                      // Always show citations from current screening results
                       setShowCitations(!showCitations);
                     }}
                     className="flex items-center justify-center space-x-2"
@@ -471,7 +475,7 @@ export default function Index() {
                     <ExternalLink className="h-4 w-4" />
                     <span>View Citations</span>
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => setShowChat(!showChat)}
                     className="bg-compliance-header hover:bg-compliance-accent text-white flex items-center justify-center space-x-2"
                   >
