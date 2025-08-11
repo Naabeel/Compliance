@@ -185,7 +185,7 @@ export default function Index() {
   };
 
   const sendChatMessage = async () => {
-    if (!chatInput.trim() || !nmId) return;
+    if (!chatInput.trim() || !nmId || loadingChat) return;
 
     const userMessage: ChatMessage = {
       type: 'user',
@@ -196,6 +196,7 @@ export default function Index() {
     setChatMessages(prev => [...prev, userMessage]);
     const currentQuery = chatInput;
     setChatInput('');
+    setLoadingChat(true);
 
     try {
       const response = await fetch('/api/answer_query', {
@@ -239,6 +240,8 @@ export default function Index() {
         timestamp: new Date()
       };
       setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoadingChat(false);
     }
   };
 
