@@ -57,6 +57,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        compliance: {
+          header: "hsl(var(--compliance-header))",
+          "header-foreground": "hsl(var(--compliance-header-foreground))",
+          sidebar: "hsl(var(--compliance-sidebar))",
+          "sidebar-foreground": "hsl(var(--compliance-sidebar-foreground))",
+          accent: "hsl(var(--compliance-accent))",
+          "accent-foreground": "hsl(var(--compliance-accent-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
