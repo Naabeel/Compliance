@@ -12,6 +12,9 @@ import {
   Edit,
   Send,
   Loader2,
+  UserCheck,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
 
 // Types
