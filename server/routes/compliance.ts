@@ -108,16 +108,26 @@ const mockScreeningResults = {
 };
 
 const mockQueries = [
-  '"Network Member" lawsuit United States news',
-  '"Network Member" fraud investigation federal crime',
-  '"Network Member" arrest for any controversy',
-  'Any legal issues involving "Network Member"',
-  '"Network Member" fined by employees or partners',
-  '"Network Member" has pending criminal charges',
-  '"Network Member" fined for violations',
-  'Were there any scandals involving "Network Member"',
-  'Was there fraud or corruption involving "Network Member"',
-  'Has "Network Member" faced any malpractice allegations'
+  '"Network Member" lawsuit United States federal court',
+  '"Network Member" fraud investigation SEC enforcement action',
+  '"Network Member" arrest criminal charges indictment',
+  'Any legal issues involving "Network Member" civil litigation',
+  '"Network Member" fined by regulatory agencies FDA USDA',
+  '"Network Member" has pending criminal charges prosecution',
+  '"Network Member" fined for violations food safety regulations',
+  'Were there any scandals involving "Network Member" corporate misconduct',
+  'Was there fraud or corruption involving "Network Member" embezzlement',
+  'Has "Network Member" faced any malpractice allegations negligence',
+  '"Network Member" bankruptcy filing financial misconduct',
+  '"Network Member" terminated fired for cause employment',
+  '"Network Member" whistleblower complaint ethics violation',
+  '"Network Member" insider trading securities violation',
+  '"Network Member" discrimination lawsuit hostile workplace',
+  '"Network Member" environmental violations EPA citations',
+  '"Network Member" tax evasion IRS investigation',
+  '"Network Member" antitrust violation price fixing conspiracy',
+  '"Network Member" product liability recall safety issues',
+  '"Network Member" bribery corruption foreign officials FCPA'
 ];
 
 // Store for tracking screening status
