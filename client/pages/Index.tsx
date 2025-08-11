@@ -349,6 +349,119 @@ export default function Index() {
           className={`${showChat ? "flex-1" : "w-full"} p-4 lg:p-6 transition-all duration-300`}
         >
           <div className="max-w-4xl mx-auto">
+
+            {/* Landing Screen - Compliance Agent Tabs */}
+            {currentState === "landing" && (
+              <div className="space-y-8">
+                <div className="text-center">
+                  <h2 className="text-3xl font-bold text-compliance-header mb-4">
+                    GLG Compliance Agent
+                  </h2>
+                  <p className="text-lg text-gray-600 mb-8">
+                    Comprehensive compliance screening and verification platform
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                  {/* Identity Verification Tab */}
+                  <Card className="relative overflow-hidden cursor-not-allowed opacity-60">
+                    <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center">
+                      <div className="bg-white px-3 py-1 rounded-full shadow-sm">
+                        <span className="text-sm font-medium text-gray-600">Coming Soon</span>
+                      </div>
+                    </div>
+                    <CardHeader className="text-center pb-4">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                        <UserCheck className="h-8 w-8 text-blue-600" />
+                      </div>
+                      <CardTitle className="text-xl">Identity Verification</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-gray-600 mb-4">
+                        Comprehensive identity verification and validation services
+                      </p>
+                      <ul className="text-sm text-gray-500 space-y-2 text-left">
+                        <li>• Document verification</li>
+                        <li>• Biometric authentication</li>
+                        <li>• Identity confidence scoring</li>
+                        <li>• Cross-reference validation</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  {/* Work History Tab */}
+                  <Card className="relative overflow-hidden cursor-not-allowed opacity-60">
+                    <div className="absolute inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center">
+                      <div className="bg-white px-3 py-1 rounded-full shadow-sm">
+                        <span className="text-sm font-medium text-gray-600">Coming Soon</span>
+                      </div>
+                    </div>
+                    <CardHeader className="text-center pb-4">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                        <FileText className="h-8 w-8 text-green-600" />
+                      </div>
+                      <CardTitle className="text-xl">Work History</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-gray-600 mb-4">
+                        Professional background verification and employment validation
+                      </p>
+                      <ul className="text-sm text-gray-500 space-y-2 text-left">
+                        <li>• Employment verification</li>
+                        <li>• Role and responsibility validation</li>
+                        <li>• Professional references</li>
+                        <li>• Career timeline analysis</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  {/* Negative News & Escalation Tab - Active */}
+                  <Card
+                    className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-shadow border-2 border-compliance-accent"
+                    onClick={navigateToNegativeNews}
+                  >
+                    <CardHeader className="text-center pb-4">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                        <AlertTriangle className="h-8 w-8 text-red-600" />
+                      </div>
+                      <CardTitle className="text-xl text-compliance-header">
+                        Negative News & Escalation
+                      </CardTitle>
+                      <div className="bg-compliance-accent text-white px-3 py-1 rounded-full text-sm font-medium">
+                        Phase 1 - Available Now
+                      </div>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-gray-600 mb-4">
+                        Comprehensive negative news screening and risk assessment
+                      </p>
+                      <ul className="text-sm text-gray-700 space-y-2 text-left mb-4">
+                        <li>• Legal issues and litigation</li>
+                        <li>• Regulatory violations</li>
+                        <li>• Media coverage analysis</li>
+                        <li>• Risk escalation protocols</li>
+                      </ul>
+                      <Button
+                        className="w-full bg-compliance-header hover:bg-compliance-accent text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigateToNegativeNews();
+                        }}
+                      >
+                        Start Screening
+                        <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="text-center text-gray-500 text-sm">
+                  <p>Phase 1: Negative News & Escalation screening is now available.</p>
+                  <p>Identity Verification and Work History modules coming in future phases.</p>
+                </div>
+              </div>
+            )}
+
             {/* Search Screen */}
             {currentState === "search" && (
               <div className="flex items-center justify-center min-h-[60vh]">
