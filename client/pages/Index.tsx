@@ -52,6 +52,8 @@ export default function Index() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingQueries, setLoadingQueries] = useState(false);
+  const [loadingChat, setLoadingChat] = useState(false);
   const [error, setError] = useState('');
   const [polling, setPolling] = useState(false);
   
