@@ -27,4 +27,16 @@ const App = () => (
   </QueryClientProvider>
 );
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Prevent multiple root creation during hot reloads
+const rootElement = document.getElementById("root")!;
+let root: any;
+
+if (!rootElement.dataset.reactRoot) {
+  root = createRoot(rootElement);
+  rootElement.dataset.reactRoot = "true";
+} else {
+  // For hot reload, we need to get the existing root
+  root = (rootElement as any)._reactInternalFiber?.root || createRoot(rootElement);
+}
+
+root.render(<App />);
