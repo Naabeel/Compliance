@@ -29,14 +29,13 @@ const App = () => (
 
 // Prevent multiple root creation during hot reloads
 const rootElement = document.getElementById("root")!;
-let root: any;
 
-if (!rootElement.dataset.reactRoot) {
-  root = createRoot(rootElement);
-  rootElement.dataset.reactRoot = "true";
+// Check if root already exists
+if (!(rootElement as any)._reactRoot) {
+  const root = createRoot(rootElement);
+  (rootElement as any)._reactRoot = root;
+  root.render(<App />);
 } else {
-  // For hot reload, we need to get the existing root
-  root = (rootElement as any)._reactInternalFiber?.root || createRoot(rootElement);
+  // Use existing root for hot reload
+  (rootElement as any)._reactRoot.render(<App />);
 }
-
-root.render(<App />);
