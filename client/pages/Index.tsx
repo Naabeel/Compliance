@@ -320,7 +320,7 @@ export default function Index() {
         <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 lg:space-x-4">
-              {currentState !== "search" && (
+              {currentState !== "landing" && (
                 <Button
                   variant="ghost"
                   size="sm"
