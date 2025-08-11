@@ -294,7 +294,7 @@ export default function Index() {
   };
 
   const resetToSearch = () => {
-    setCurrentState("search");
+    setCurrentState("landing");
     setNmId("");
     setNetworkMember(null);
     setScreeningStatus(null);
