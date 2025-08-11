@@ -45,7 +45,7 @@ interface ChatMessage {
 }
 
 // App States
-type AppState = "search" | "details" | "screening" | "results";
+type AppState = "landing" | "search" | "details" | "screening" | "results";
 
 export default function Index() {
   // State management
