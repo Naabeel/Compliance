@@ -271,7 +271,11 @@ export default function Index() {
   };
 
   const goBack = () => {
-    if (currentState === "details") {
+    if (currentState === "search") {
+      setCurrentState("landing");
+      setNmId("");
+      setError("");
+    } else if (currentState === "details") {
       setCurrentState("search");
       setNetworkMember(null);
       setError("");
