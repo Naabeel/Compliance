@@ -49,6 +49,7 @@ export default function Index() {
   const [showCitations, setShowCitations] = useState(false);
   const [showQueries, setShowQueries] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [sectionOrder, setSectionOrder] = useState<string[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,12 +61,12 @@ export default function Index() {
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll chat to bottom
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages]);
+  // Auto-scroll chat to bottom (removed as requested)
+  // useEffect(() => {
+  //   if (chatEndRef.current) {
+  //     chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // }, [chatMessages]);
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -176,6 +177,12 @@ export default function Index() {
       // Display all queries from response
       setQueries(data.queries || []);
       setShowQueries(true);
+
+      // Add to section order if not already present
+      setSectionOrder(prev => {
+        const newOrder = prev.filter(item => item !== 'queries');
+        return ['queries', ...newOrder];
+      });
     } catch (err) {
       console.error('Load queries error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load queries');
@@ -469,6 +476,13 @@ export default function Index() {
                     variant="outline"
                     onClick={() => {
                       setShowCitations(!showCitations);
+                      if (!showCitations) {
+                        // Add to section order if not already present
+                        setSectionOrder(prev => {
+                          const newOrder = prev.filter(item => item !== 'citations');
+                          return ['citations', ...newOrder];
+                        });
+                      }
                     }}
                     className="flex items-center justify-center space-x-2"
                   >
@@ -484,79 +498,92 @@ export default function Index() {
                   </Button>
                 </div>
 
-                {/* Citations */}
-                {showCitations && screeningStatus?.results?.citations && (
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle>Citations ({screeningStatus.results.citations.length})</CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowCitations(false)}
-                      >
-                        ×
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-64">
-                        <div className="space-y-2">
-                          {screeningStatus.results.citations.map((citation, index) => (
-                            <div key={index} className="p-3 bg-gray-50 rounded border">
-                              <div className="text-xs text-gray-500 mb-1">Citation {index + 1}</div>
-                              <a
-                                href={citation}
-                                className="text-sm text-compliance-accent hover:underline flex items-center break-all"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {citation} <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
-                              </a>
+                {/* Dynamic Sections - Show in order of clicks */}
+                {sectionOrder.map((section) => {
+                  if (section === 'citations' && showCitations && screeningStatus?.results?.citations) {
+                    return (
+                      <Card key="citations">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <CardTitle>Citations ({screeningStatus.results.citations.length})</CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setShowCitations(false);
+                              setSectionOrder(prev => prev.filter(item => item !== 'citations'));
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </CardHeader>
+                        <CardContent>
+                          <ScrollArea className="h-64">
+                            <div className="space-y-2">
+                              {screeningStatus.results.citations.map((citation, index) => (
+                                <div key={index} className="p-3 bg-gray-50 rounded border">
+                                  <div className="text-xs text-gray-500 mb-1">Citation {index + 1}</div>
+                                  <a
+                                    href={citation}
+                                    className="text-sm text-compliance-accent hover:underline flex items-center break-all"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {citation} <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                  </a>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                      <div className="mt-4 text-xs text-gray-500">
-                        Total citations: {screeningStatus.results.citations.length}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                          </ScrollArea>
+                          <div className="mt-4 text-xs text-gray-500">
+                            Total citations: {screeningStatus.results.citations.length}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
 
-                {/* Queries */}
-                {showQueries && (
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle>Generated Queries ({queries.length})</CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowQueries(false)}
-                      >
-                        ×
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-64">
-                        <div className="space-y-2">
-                          {queries.map((query, index) => (
-                            <div key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded border">
-                              <div className="flex-1">
-                                <div className="text-xs text-gray-500 mb-1">Query {index + 1}</div>
-                                <span className="text-sm break-words">{query}</span>
-                              </div>
-                              <Button variant="outline" size="sm" className="ml-2 flex-shrink-0">
-                                <Edit className="h-3 w-3" />
-                              </Button>
+                  if (section === 'queries' && showQueries) {
+                    return (
+                      <Card key="queries">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <CardTitle>Generated Queries ({queries.length})</CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setShowQueries(false);
+                              setSectionOrder(prev => prev.filter(item => item !== 'queries'));
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </CardHeader>
+                        <CardContent>
+                          <ScrollArea className="h-64">
+                            <div className="space-y-2">
+                              {queries.map((query, index) => (
+                                <div key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded border">
+                                  <div className="flex-1">
+                                    <div className="text-xs text-gray-500 mb-1">Query {index + 1}</div>
+                                    <span className="text-sm break-words">{query}</span>
+                                  </div>
+                                  <Button variant="outline" size="sm" className="ml-2 flex-shrink-0">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                      <div className="mt-4 text-xs text-gray-500">
-                        Total queries: {queries.length} | Click 'Edit' to modify queries (functionality coming soon)
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                          </ScrollArea>
+                          <div className="mt-4 text-xs text-gray-500">
+                            Total queries: {queries.length} | Click 'Edit' to modify queries (functionality coming soon)
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
+
+                  return null;
+                })}
 
                 {/* Screening Summary */}
                 <Card>
@@ -565,20 +592,10 @@ export default function Index() {
                   </CardHeader>
                   <CardContent>
                     {screeningStatus?.results?.summary ? (
-                      <div className="space-y-4">
-                        <div
-                          className="prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: screeningStatus.results.summary }}
-                        />
-                        <div className="mt-6 pt-4 border-t bg-gray-50 p-4 rounded">
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <div><strong>Summary Length:</strong> {screeningStatus.results.summary.length} characters</div>
-                            <div><strong>Citations Available:</strong> {screeningStatus.results.citations?.length || 0}</div>
-                            <div><strong>Screening Status:</strong> {screeningStatus.status}</div>
-                            <div><strong>Network Member ID:</strong> {screeningStatus.nm_id}</div>
-                          </div>
-                        </div>
-                      </div>
+                      <div
+                        className="prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: screeningStatus.results.summary }}
+                      />
                     ) : (
                       <div className="text-center text-gray-500 py-8">
                         <p>No summary data available</p>
@@ -598,15 +615,15 @@ export default function Index() {
           </div>
         </main>
 
-        {/* Chat Sidebar */}
+        {/* Chat Sidebar - Fixed Height */}
         {showChat && (
-          <div className="w-80 bg-white border-l shadow-lg flex flex-col">
-            <div className="p-4 border-b bg-compliance-header text-white">
+          <div className="w-80 bg-white border-l shadow-lg flex flex-col h-screen">
+            <div className="p-4 border-b bg-compliance-header text-white flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Chat with Agent</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="text-white hover:bg-white/10"
                   onClick={() => setShowChat(false)}
                 >
@@ -614,49 +631,50 @@ export default function Index() {
                 </Button>
               </div>
             </div>
-            
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {chatMessages.length === 0 && (
-                  <div className="text-center text-gray-500 text-sm">
-                    Ask me anything about {networkMember?.name}'s screening results.
-                  </div>
-                )}
-                {chatMessages.map((msg, index) => (
-                  <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
-                      msg.type === 'user' 
-                        ? 'bg-compliance-header text-white' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {msg.message}
+
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4">
+                  {chatMessages.length === 0 && (
+                    <div className="text-center text-gray-500 text-sm">
+                      Ask me anything about {networkMember?.name}'s screening results.
                     </div>
-                  </div>
-                ))}
-                <div ref={chatEndRef} />
-              </div>
-            </ScrollArea>
-            
-            <div className="p-4 border-t">
-              <div className="flex space-x-2">
-                <Input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Type your question..."
-                  onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
-                />
-                <Button
-                  onClick={sendChatMessage}
-                  disabled={!chatInput.trim() || loadingChat}
-                  size="sm"
-                  className="bg-compliance-header hover:bg-compliance-accent"
-                >
-                  {loadingChat ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
                   )}
-                </Button>
+                  {chatMessages.map((msg, index) => (
+                    <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                        msg.type === 'user'
+                          ? 'bg-compliance-header text-white'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {msg.message}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+
+              <div className="p-4 border-t flex-shrink-0">
+                <div className="flex space-x-2">
+                  <Input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Type your question..."
+                    onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
+                  />
+                  <Button
+                    onClick={sendChatMessage}
+                    disabled={!chatInput.trim() || loadingChat}
+                    size="sm"
+                    className="bg-compliance-header hover:bg-compliance-accent"
+                  >
+                    {loadingChat ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
