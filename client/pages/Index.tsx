@@ -87,10 +87,10 @@ export default function Index() {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex flex-col lg:flex-row">
         {/* Sidebar - Network Member Details */}
-        <aside className="w-80 bg-compliance-sidebar border-r border-gray-200 min-h-screen">
-          <div className="p-6">
+        <aside className="w-full lg:w-80 bg-compliance-sidebar border-r border-gray-200 lg:min-h-screen">
+          <div className="p-4 lg:p-6">
             <div className="space-y-6">
               {/* NM Details Header */}
               <div>
