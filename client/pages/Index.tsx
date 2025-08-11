@@ -192,8 +192,9 @@ export default function Index() {
     };
 
     setChatMessages(prev => [...prev, userMessage]);
+    const currentQuery = chatInput;
     setChatInput('');
-    
+
     try {
       const response = await fetch('/api/answer_query', {
         method: 'POST',
@@ -202,23 +203,37 @@ export default function Index() {
         },
         body: JSON.stringify({
           nm_id: nmId,
-          user_query: chatInput
+          user_query: currentQuery
         })
       });
-      
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
+      }
+
       const data = await response.json();
-      
+      console.log('Chat API Response:', data);
+
+      let agentResponse = '';
+      if (data.answer) {
+        agentResponse = data.answer;
+      } else {
+        agentResponse = 'I apologize, but I could not process your request.';
+        console.warn('No answer field in response:', data);
+      }
+
       const agentMessage: ChatMessage = {
         type: 'agent',
-        message: data.answer || 'I apologize, but I could not process your request.',
+        message: agentResponse,
         timestamp: new Date()
       };
-      
+
       setChatMessages(prev => [...prev, agentMessage]);
     } catch (err) {
+      console.error('Chat API error:', err);
       const errorMessage: ChatMessage = {
         type: 'agent',
-        message: 'Sorry, I encountered an error while processing your request.',
+        message: `Sorry, I encountered an error: ${err instanceof Error ? err.message : 'Unknown error'}`,
         timestamp: new Date()
       };
       setChatMessages(prev => [...prev, errorMessage]);
