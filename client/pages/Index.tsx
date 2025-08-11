@@ -428,7 +428,7 @@ export default function Index() {
                         Negative News & Escalation
                       </CardTitle>
                       <div className="bg-compliance-accent text-white px-3 py-1 rounded-full text-sm font-medium">
-                        Phase 1 - Available Now
+                        Available Now
                       </div>
                     </CardHeader>
                     <CardContent className="text-center">
