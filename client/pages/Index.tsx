@@ -4,7 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Search, ExternalLink, MessageSquare, Edit, Send, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Search,
+  ExternalLink,
+  MessageSquare,
+  Edit,
+  Send,
+  Loader2,
+} from "lucide-react";
 
 // Types
 interface NetworkMember {
@@ -31,33 +39,36 @@ interface ScreeningStatus {
 }
 
 interface ChatMessage {
-  type: 'user' | 'agent';
+  type: "user" | "agent";
   message: string;
   timestamp: Date;
 }
 
 // App States
-type AppState = 'search' | 'details' | 'screening' | 'results';
+type AppState = "search" | "details" | "screening" | "results";
 
 export default function Index() {
   // State management
-  const [currentState, setCurrentState] = useState<AppState>('search');
-  const [nmId, setNmId] = useState('');
-  const [networkMember, setNetworkMember] = useState<NetworkMember | null>(null);
-  const [screeningStatus, setScreeningStatus] = useState<ScreeningStatus | null>(null);
+  const [currentState, setCurrentState] = useState<AppState>("search");
+  const [nmId, setNmId] = useState("");
+  const [networkMember, setNetworkMember] = useState<NetworkMember | null>(
+    null,
+  );
+  const [screeningStatus, setScreeningStatus] =
+    useState<ScreeningStatus | null>(null);
   const [queries, setQueries] = useState<string[]>([]);
   const [showCitations, setShowCitations] = useState(false);
   const [showQueries, setShowQueries] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [sectionOrder, setSectionOrder] = useState<string[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState('');
+  const [chatInput, setChatInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingQueries, setLoadingQueries] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [polling, setPolling] = useState(false);
-  
+
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -80,25 +91,27 @@ export default function Index() {
   // API Functions
   const findNetworkMember = async () => {
     if (!nmId.trim()) {
-      setError('Please enter a Network Member ID');
+      setError("Please enter a Network Member ID");
       return;
     }
 
     setLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
       const response = await fetch(`/api/get_nm_info/${nmId}`);
-      
+
       if (!response.ok) {
-        throw new Error('Network Member not found');
+        throw new Error("Network Member not found");
       }
-      
+
       const data = await response.json();
       setNetworkMember(data);
-      setCurrentState('details');
+      setCurrentState("details");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to find Network Member');
+      setError(
+        err instanceof Error ? err.message : "Failed to find Network Member",
+      );
     } finally {
       setLoading(false);
     }
@@ -106,23 +119,25 @@ export default function Index() {
 
   const startScreening = async () => {
     setLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
-      const response = await fetch('/api/start_screening');
-      
+      const response = await fetch("/api/start_screening");
+
       if (!response.ok) {
-        throw new Error('Failed to start screening');
+        throw new Error("Failed to start screening");
       }
-      
+
       const data = await response.json();
-      
+
       if (data.nm_id) {
-        setCurrentState('screening');
+        setCurrentState("screening");
         startPolling(data.nm_id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start screening');
+      setError(
+        err instanceof Error ? err.message : "Failed to start screening",
+      );
     } finally {
       setLoading(false);
     }
@@ -130,29 +145,29 @@ export default function Index() {
 
   const startPolling = (pollNmId: string) => {
     setPolling(true);
-    
+
     const poll = async () => {
       try {
         const response = await fetch(`/api/status/${pollNmId}`);
         const data = await response.json();
-        
+
         setScreeningStatus(data);
-        
-        if (data.status.toLowerCase() === 'completed') {
+
+        if (data.status.toLowerCase() === "completed") {
           setPolling(false);
-          setCurrentState('results');
+          setCurrentState("results");
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
           }
         }
       } catch (err) {
-        console.error('Polling error:', err);
+        console.error("Polling error:", err);
       }
     };
 
     // Initial poll
     poll();
-    
+
     // Set up interval
     pollIntervalRef.current = setInterval(poll, 3000); // Poll every 3 seconds
   };
@@ -161,7 +176,7 @@ export default function Index() {
     if (!nmId) return;
 
     setLoadingQueries(true);
-    setError('');
+    setError("");
 
     try {
       // Add timestamp to prevent caching
@@ -172,20 +187,20 @@ export default function Index() {
       }
 
       const data = await response.json();
-      console.log('Queries API Response:', data); // Debug log
+      console.log("Queries API Response:", data); // Debug log
 
       // Display all queries from response
       setQueries(data.queries || []);
       setShowQueries(true);
 
       // Add to section order if not already present
-      setSectionOrder(prev => {
-        const newOrder = prev.filter(item => item !== 'queries');
-        return ['queries', ...newOrder];
+      setSectionOrder((prev) => {
+        const newOrder = prev.filter((item) => item !== "queries");
+        return ["queries", ...newOrder];
       });
     } catch (err) {
-      console.error('Load queries error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load queries');
+      console.error("Load queries error:", err);
+      setError(err instanceof Error ? err.message : "Failed to load queries");
     } finally {
       setLoadingQueries(false);
     }
@@ -195,26 +210,26 @@ export default function Index() {
     if (!chatInput.trim() || !nmId || loadingChat) return;
 
     const userMessage: ChatMessage = {
-      type: 'user',
+      type: "user",
       message: chatInput,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setChatMessages(prev => [...prev, userMessage]);
+    setChatMessages((prev) => [...prev, userMessage]);
     const currentQuery = chatInput;
-    setChatInput('');
+    setChatInput("");
     setLoadingChat(true);
 
     try {
-      const response = await fetch('/api/answer_query', {
-        method: 'POST',
+      const response = await fetch("/api/answer_query", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           nm_id: nmId,
-          user_query: currentQuery
-        })
+          user_query: currentQuery,
+        }),
       });
 
       if (!response.ok) {
@@ -222,43 +237,43 @@ export default function Index() {
       }
 
       const data = await response.json();
-      console.log('Chat API Response:', data);
+      console.log("Chat API Response:", data);
 
-      let agentResponse = '';
+      let agentResponse = "";
       if (data.answer) {
         agentResponse = data.answer;
       } else {
-        agentResponse = 'I apologize, but I could not process your request.';
-        console.warn('No answer field in response:', data);
+        agentResponse = "I apologize, but I could not process your request.";
+        console.warn("No answer field in response:", data);
       }
 
       const agentMessage: ChatMessage = {
-        type: 'agent',
+        type: "agent",
         message: agentResponse,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
-      setChatMessages(prev => [...prev, agentMessage]);
+      setChatMessages((prev) => [...prev, agentMessage]);
     } catch (err) {
-      console.error('Chat API error:', err);
+      console.error("Chat API error:", err);
       const errorMessage: ChatMessage = {
-        type: 'agent',
-        message: `Sorry, I encountered an error: ${err instanceof Error ? err.message : 'Unknown error'}`,
-        timestamp: new Date()
+        type: "agent",
+        message: `Sorry, I encountered an error: ${err instanceof Error ? err.message : "Unknown error"}`,
+        timestamp: new Date(),
       };
-      setChatMessages(prev => [...prev, errorMessage]);
+      setChatMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoadingChat(false);
     }
   };
 
   const goBack = () => {
-    if (currentState === 'details') {
-      setCurrentState('search');
+    if (currentState === "details") {
+      setCurrentState("search");
       setNetworkMember(null);
-      setError('');
-    } else if (currentState === 'screening' || currentState === 'results') {
-      setCurrentState('details');
+      setError("");
+    } else if (currentState === "screening" || currentState === "results") {
+      setCurrentState("details");
       setScreeningStatus(null);
       setQueries([]);
       setShowCitations(false);
@@ -272,8 +287,8 @@ export default function Index() {
   };
 
   const resetToSearch = () => {
-    setCurrentState('search');
-    setNmId('');
+    setCurrentState("search");
+    setNmId("");
     setNetworkMember(null);
     setScreeningStatus(null);
     setQueries([]);
@@ -281,7 +296,7 @@ export default function Index() {
     setShowQueries(false);
     setShowChat(false);
     setChatMessages([]);
-    setError('');
+    setError("");
     if (pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current);
     }
@@ -294,11 +309,11 @@ export default function Index() {
         <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 lg:space-x-4">
-              {currentState !== 'search' && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-white hover:bg-white/10" 
+              {currentState !== "search" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/10"
                   onClick={goBack}
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -306,7 +321,10 @@ export default function Index() {
                 </Button>
               )}
             </div>
-            <h1 className="text-lg lg:text-xl font-semibold text-center cursor-pointer" onClick={resetToSearch}>
+            <h1
+              className="text-lg lg:text-xl font-semibold text-center cursor-pointer"
+              onClick={resetToSearch}
+            >
               GLG Compliance Agent
             </h1>
             <div className="w-16 lg:w-32"></div>
@@ -316,15 +334,18 @@ export default function Index() {
 
       <div className="flex">
         {/* Main Content */}
-        <main className={`${showChat ? 'flex-1' : 'w-full'} p-4 lg:p-6 transition-all duration-300`}>
+        <main
+          className={`${showChat ? "flex-1" : "w-full"} p-4 lg:p-6 transition-all duration-300`}
+        >
           <div className="max-w-4xl mx-auto">
-            
             {/* Search Screen */}
-            {currentState === 'search' && (
+            {currentState === "search" && (
               <div className="flex items-center justify-center min-h-[60vh]">
                 <Card className="w-full max-w-md">
                   <CardHeader>
-                    <CardTitle className="text-center">Find Network Member</CardTitle>
+                    <CardTitle className="text-center">
+                      Find Network Member
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
@@ -334,14 +355,14 @@ export default function Index() {
                         value={nmId}
                         onChange={(e) => setNmId(e.target.value)}
                         placeholder="Enter NM ID..."
-                        onKeyPress={(e) => e.key === 'Enter' && findNetworkMember()}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && findNetworkMember()
+                        }
                       />
                     </div>
-                    {error && (
-                      <p className="text-sm text-red-600">{error}</p>
-                    )}
-                    <Button 
-                      onClick={findNetworkMember} 
+                    {error && <p className="text-sm text-red-600">{error}</p>}
+                    <Button
+                      onClick={findNetworkMember}
                       disabled={loading}
                       className="w-full bg-compliance-header hover:bg-compliance-accent"
                     >
@@ -358,45 +379,59 @@ export default function Index() {
             )}
 
             {/* Network Member Details Screen */}
-            {currentState === 'details' && networkMember && (
+            {currentState === "details" && networkMember && (
               <div className="space-y-6">
                 <h2 className="text-xl lg:text-2xl font-semibold text-compliance-header">
                   Network Member Details
                 </h2>
-                
+
                 <Card>
                   <CardContent className="p-6 space-y-4">
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Name</Label>
-                      <p className="text-lg font-semibold">{networkMember.name}</p>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Name
+                      </Label>
+                      <p className="text-lg font-semibold">
+                        {networkMember.name}
+                      </p>
                     </div>
-                    
+
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Biography</Label>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Biography
+                      </Label>
                       <p className="text-sm text-gray-700">
-                        {networkMember.biography.length > 200 
-                          ? `${networkMember.biography.substring(0, 200)}...` 
+                        {networkMember.biography.length > 200
+                          ? `${networkMember.biography.substring(0, 200)}...`
                           : networkMember.biography}
                       </p>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Practice Area</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Practice Area
+                        </Label>
                         <p className="text-sm">{networkMember.practice_area}</p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Council Name</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Council Name
+                        </Label>
                         <p className="text-sm">{networkMember.council_name}</p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Country</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Country
+                        </Label>
                         <p className="text-sm">{networkMember.country}</p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">LinkedIn</Label>
-                        <a 
-                          href={networkMember.linkedin_url} 
+                        <Label className="text-sm font-medium text-gray-600">
+                          LinkedIn
+                        </Label>
+                        <a
+                          href={networkMember.linkedin_url}
                           className="text-sm text-compliance-accent hover:underline flex items-center"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -405,21 +440,32 @@ export default function Index() {
                         </a>
                       </div>
                     </div>
-                    
+
                     <div>
-                      <Label className="text-sm font-medium text-gray-600 mb-2 block">Work History</Label>
+                      <Label className="text-sm font-medium text-gray-600 mb-2 block">
+                        Work History
+                      </Label>
                       <div className="space-y-2">
-                        {networkMember.work_history.slice(0, 3).map((job, index) => (
-                          <div key={index} className="border-l-2 border-gray-200 pl-3">
-                            <p className="text-sm font-medium">{job.company}</p>
-                            <p className="text-xs text-gray-600">{job.title} • {job.period}</p>
-                          </div>
-                        ))}
+                        {networkMember.work_history
+                          .slice(0, 3)
+                          .map((job, index) => (
+                            <div
+                              key={index}
+                              className="border-l-2 border-gray-200 pl-3"
+                            >
+                              <p className="text-sm font-medium">
+                                {job.company}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                {job.title} • {job.period}
+                              </p>
+                            </div>
+                          ))}
                       </div>
                     </div>
-                    
+
                     <div className="pt-4 border-t">
-                      <Button 
+                      <Button
                         onClick={startScreening}
                         disabled={loading}
                         className="w-full bg-compliance-header hover:bg-compliance-accent"
@@ -436,14 +482,16 @@ export default function Index() {
             )}
 
             {/* Screening in Progress Screen */}
-            {currentState === 'screening' && (
+            {currentState === "screening" && (
               <div className="flex items-center justify-center min-h-[60vh]">
                 <Card className="w-full max-w-md">
                   <CardContent className="p-6 text-center space-y-4">
                     <Loader2 className="h-12 w-12 mx-auto animate-spin text-compliance-header" />
-                    <h3 className="text-lg font-semibold">Screening in Progress</h3>
+                    <h3 className="text-lg font-semibold">
+                      Screening in Progress
+                    </h3>
                     <p className="text-sm text-gray-600">
-                      {screeningStatus?.status || 'Initializing screening...'}
+                      {screeningStatus?.status || "Initializing screening..."}
                     </p>
                   </CardContent>
                 </Card>
@@ -451,7 +499,7 @@ export default function Index() {
             )}
 
             {/* Results Screen */}
-            {currentState === 'results' && screeningStatus?.results && (
+            {currentState === "results" && screeningStatus?.results && (
               <div className="space-y-6">
                 <h2 className="text-xl lg:text-2xl font-semibold text-compliance-header">
                   Screening Results for {networkMember?.name}
@@ -470,7 +518,9 @@ export default function Index() {
                     ) : (
                       <Search className="h-4 w-4" />
                     )}
-                    <span>{loadingQueries ? 'Loading...' : 'View Queries'}</span>
+                    <span>
+                      {loadingQueries ? "Loading..." : "View Queries"}
+                    </span>
                   </Button>
                   <Button
                     variant="outline"
@@ -478,9 +528,11 @@ export default function Index() {
                       setShowCitations(!showCitations);
                       if (!showCitations) {
                         // Add to section order if not already present
-                        setSectionOrder(prev => {
-                          const newOrder = prev.filter(item => item !== 'citations');
-                          return ['citations', ...newOrder];
+                        setSectionOrder((prev) => {
+                          const newOrder = prev.filter(
+                            (item) => item !== "citations",
+                          );
+                          return ["citations", ...newOrder];
                         });
                       }
                     }}
@@ -500,17 +552,26 @@ export default function Index() {
 
                 {/* Dynamic Sections - Show in order of clicks */}
                 {sectionOrder.map((section) => {
-                  if (section === 'citations' && showCitations && screeningStatus?.results?.citations) {
+                  if (
+                    section === "citations" &&
+                    showCitations &&
+                    screeningStatus?.results?.citations
+                  ) {
                     return (
                       <Card key="citations">
                         <CardHeader className="flex flex-row items-center justify-between">
-                          <CardTitle>Citations ({screeningStatus.results.citations.length})</CardTitle>
+                          <CardTitle>
+                            Citations (
+                            {screeningStatus.results.citations.length})
+                          </CardTitle>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
                               setShowCitations(false);
-                              setSectionOrder(prev => prev.filter(item => item !== 'citations'));
+                              setSectionOrder((prev) =>
+                                prev.filter((item) => item !== "citations"),
+                              );
                             }}
                           >
                             ×
@@ -519,40 +580,53 @@ export default function Index() {
                         <CardContent>
                           <ScrollArea className="h-64">
                             <div className="space-y-2">
-                              {screeningStatus.results.citations.map((citation, index) => (
-                                <div key={index} className="p-3 bg-gray-50 rounded border">
-                                  <div className="text-xs text-gray-500 mb-1">Citation {index + 1}</div>
-                                  <a
-                                    href={citation}
-                                    className="text-sm text-compliance-accent hover:underline flex items-center break-all"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                              {screeningStatus.results.citations.map(
+                                (citation, index) => (
+                                  <div
+                                    key={index}
+                                    className="p-3 bg-gray-50 rounded border"
                                   >
-                                    {citation} <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
-                                  </a>
-                                </div>
-                              ))}
+                                    <div className="text-xs text-gray-500 mb-1">
+                                      Citation {index + 1}
+                                    </div>
+                                    <a
+                                      href={citation}
+                                      className="text-sm text-compliance-accent hover:underline flex items-center break-all"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      {citation}{" "}
+                                      <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+                                    </a>
+                                  </div>
+                                ),
+                              )}
                             </div>
                           </ScrollArea>
                           <div className="mt-4 text-xs text-gray-500">
-                            Total citations: {screeningStatus.results.citations.length}
+                            Total citations:{" "}
+                            {screeningStatus.results.citations.length}
                           </div>
                         </CardContent>
                       </Card>
                     );
                   }
 
-                  if (section === 'queries' && showQueries) {
+                  if (section === "queries" && showQueries) {
                     return (
                       <Card key="queries">
                         <CardHeader className="flex flex-row items-center justify-between">
-                          <CardTitle>Generated Queries ({queries.length})</CardTitle>
+                          <CardTitle>
+                            Generated Queries ({queries.length})
+                          </CardTitle>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
                               setShowQueries(false);
-                              setSectionOrder(prev => prev.filter(item => item !== 'queries'));
+                              setSectionOrder((prev) =>
+                                prev.filter((item) => item !== "queries"),
+                              );
                             }}
                           >
                             ×
@@ -562,12 +636,23 @@ export default function Index() {
                           <ScrollArea className="h-64">
                             <div className="space-y-2">
                               {queries.map((query, index) => (
-                                <div key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded border">
+                                <div
+                                  key={index}
+                                  className="flex items-start justify-between p-3 bg-gray-50 rounded border"
+                                >
                                   <div className="flex-1">
-                                    <div className="text-xs text-gray-500 mb-1">Query {index + 1}</div>
-                                    <span className="text-sm break-words">{query}</span>
+                                    <div className="text-xs text-gray-500 mb-1">
+                                      Query {index + 1}
+                                    </div>
+                                    <span className="text-sm break-words">
+                                      {query}
+                                    </span>
                                   </div>
-                                  <Button variant="outline" size="sm" className="ml-2 flex-shrink-0">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="ml-2 flex-shrink-0"
+                                  >
                                     <Edit className="h-3 w-3" />
                                   </Button>
                                 </div>
@@ -575,7 +660,8 @@ export default function Index() {
                             </div>
                           </ScrollArea>
                           <div className="mt-4 text-xs text-gray-500">
-                            Total queries: {queries.length} | Click 'Edit' to modify queries (functionality coming soon)
+                            Total queries: {queries.length} | Click 'Edit' to
+                            modify queries (functionality coming soon)
                           </div>
                         </CardContent>
                       </Card>
@@ -594,12 +680,16 @@ export default function Index() {
                     {screeningStatus?.results?.summary ? (
                       <div
                         className="prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: screeningStatus.results.summary }}
+                        dangerouslySetInnerHTML={{
+                          __html: screeningStatus.results.summary,
+                        }}
                       />
                     ) : (
                       <div className="text-center text-gray-500 py-8">
                         <p>No summary data available</p>
-                        <p className="text-xs mt-2">This may indicate an issue with the API response</p>
+                        <p className="text-xs mt-2">
+                          This may indicate an issue with the API response
+                        </p>
                       </div>
                     )}
                   </CardContent>
@@ -607,7 +697,7 @@ export default function Index() {
               </div>
             )}
 
-            {error && currentState !== 'search' && (
+            {error && currentState !== "search" && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-600">{error}</p>
               </div>
@@ -637,16 +727,22 @@ export default function Index() {
                 <div className="space-y-4">
                   {chatMessages.length === 0 && (
                     <div className="text-center text-gray-500 text-sm">
-                      Ask me anything about {networkMember?.name}'s screening results.
+                      Ask me anything about {networkMember?.name}'s screening
+                      results.
                     </div>
                   )}
                   {chatMessages.map((msg, index) => (
-                    <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
-                        msg.type === 'user'
-                          ? 'bg-compliance-header text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
+                    <div
+                      key={index}
+                      className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                          msg.type === "user"
+                            ? "bg-compliance-header text-white"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
                         {msg.message}
                       </div>
                     </div>
@@ -660,7 +756,7 @@ export default function Index() {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Type your question..."
-                    onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
+                    onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
                   />
                   <Button
                     onClick={sendChatMessage}

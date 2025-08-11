@@ -4,7 +4,8 @@ import { RequestHandler } from "express";
 const mockNetworkMembers: { [key: string]: any } = {
   "6023085": {
     name: "Michael Bartikoski",
-    biography: "Michael Bartikoski is an executive in the food and beverage industry and is currently serving as COO for CraftMark Bakery, LLC - prior to that he was COO at Diamond Crystal Brands. He was also an interim executive for Rialto Banking Company serving as their VP of Operations.",
+    biography:
+      "Michael Bartikoski is an executive in the food and beverage industry and is currently serving as COO for CraftMark Bakery, LLC - prior to that he was COO at Diamond Crystal Brands. He was also an interim executive for Rialto Banking Company serving as their VP of Operations.",
     practice_area: "Consumer Goods & Services",
     council_name: "Consumer Goods & Services Council",
     country: "United States",
@@ -13,23 +14,24 @@ const mockNetworkMembers: { [key: string]: any } = {
       {
         company: "CraftMark Bakery, LLC",
         title: "Chief Operating Officer",
-        period: "2020-Present"
+        period: "2020-Present",
       },
       {
         company: "Diamond Crystal Brands",
-        title: "Chief Operating Officer", 
-        period: "2018-2020"
+        title: "Chief Operating Officer",
+        period: "2018-2020",
       },
       {
         company: "Rialto Banking Company",
         title: "VP of Operations",
-        period: "2015-2018"
-      }
-    ]
+        period: "2015-2018",
+      },
+    ],
   },
   "12345": {
     name: "Sarah Johnson",
-    biography: "Sarah Johnson is a senior technology executive with over 15 years of experience in software development and digital transformation. She currently serves as CTO at TechCorp Industries.",
+    biography:
+      "Sarah Johnson is a senior technology executive with over 15 years of experience in software development and digital transformation. She currently serves as CTO at TechCorp Industries.",
     practice_area: "Technology & Innovation",
     council_name: "Technology Innovation Council",
     country: "Canada",
@@ -38,15 +40,15 @@ const mockNetworkMembers: { [key: string]: any } = {
       {
         company: "TechCorp Industries",
         title: "Chief Technology Officer",
-        period: "2021-Present"
+        period: "2021-Present",
       },
       {
         company: "Innovation Labs",
         title: "VP of Engineering",
-        period: "2018-2021"
-      }
-    ]
-  }
+        period: "2018-2021",
+      },
+    ],
+  },
 };
 
 const mockScreeningResults = {
@@ -103,8 +105,8 @@ const mockScreeningResults = {
     "https://www.reuters.com/business/retail-consumer/food-beverage-industry-news/?utm_source=compliance_search",
     "https://www.wsj.com/search?query=food+industry+executives&utm_source=compliance_search",
     "https://www.ftc.gov/enforcement/cases-proceedings/search?combine=food+beverage&utm_source=compliance_search",
-    "https://www.justice.gov/search/site/food%20industry%20executives?utm_source=compliance_search"
-  ]
+    "https://www.justice.gov/search/site/food%20industry%20executives?utm_source=compliance_search",
+  ],
 };
 
 const mockQueries = [
@@ -127,7 +129,7 @@ const mockQueries = [
   '"Network Member" tax evasion IRS investigation',
   '"Network Member" antitrust violation price fixing conspiracy',
   '"Network Member" product liability recall safety issues',
-  '"Network Member" bribery corruption foreign officials FCPA'
+  '"Network Member" bribery corruption foreign officials FCPA',
 ];
 
 // Store for tracking screening status
@@ -135,74 +137,77 @@ const screeningStatus: { [key: string]: any } = {};
 
 export const getNMInfo: RequestHandler = (req, res) => {
   const { nm_id } = req.params;
-  
+
   const networkMember = mockNetworkMembers[nm_id];
-  
+
   if (!networkMember) {
     return res.status(404).json({ error: "Network Member not found" });
   }
-  
+
   res.json(networkMember);
 };
 
 export const startScreening: RequestHandler = (req, res) => {
   // In a real implementation, this would initiate actual screening
   const nm_id = "6023085"; // Mock ID for demo
-  
+
   // Simulate screening process
   screeningStatus[nm_id] = {
     nm_id,
     status: "Initializing screening process...",
-    startTime: Date.now()
+    startTime: Date.now(),
   };
-  
+
   // Simulate different status updates
   setTimeout(() => {
     screeningStatus[nm_id].status = "Collecting public records...";
   }, 2000);
-  
+
   setTimeout(() => {
     screeningStatus[nm_id].status = "Analyzing news sources...";
   }, 5000);
-  
+
   setTimeout(() => {
     screeningStatus[nm_id].status = "Summarizing results...";
   }, 8000);
-  
+
   setTimeout(() => {
     screeningStatus[nm_id] = {
       nm_id,
       status: "Completed",
-      results: mockScreeningResults
+      results: mockScreeningResults,
     };
   }, 12000);
-  
+
   res.json({
     message: "Screening started successfully",
-    nm_id
+    nm_id,
   });
 };
 
 export const getStatus: RequestHandler = (req, res) => {
   const { nm_id } = req.params;
-  
+
   const status = screeningStatus[nm_id];
-  
+
   if (!status) {
     return res.status(404).json({ error: "Screening not found" });
   }
-  
+
   res.json(status);
 };
 
 export const getQueries: RequestHandler = (req, res) => {
   const { nm_id } = req.params;
-  
+
   // In a real implementation, this would fetch actual queries used for the NM
-  const queries = mockQueries.map(query => 
-    query.replace("Network Member", mockNetworkMembers[nm_id]?.name || "Network Member")
+  const queries = mockQueries.map((query) =>
+    query.replace(
+      "Network Member",
+      mockNetworkMembers[nm_id]?.name || "Network Member",
+    ),
   );
-  
+
   res.json({ queries });
 };
 
@@ -220,7 +225,10 @@ export const answerQuery: RequestHandler = (req, res) => {
   // Generate comprehensive AI response based on query
   let answer = `I understand your question about ${memberName}'s screening results. `;
 
-  if (user_query.toLowerCase().includes('controversy') || user_query.toLowerCase().includes('negative')) {
+  if (
+    user_query.toLowerCase().includes("controversy") ||
+    user_query.toLowerCase().includes("negative")
+  ) {
     answer += `Based on our comprehensive screening of ${memberName}, no controversies or negative news were found. Our analysis included:
 
 • Review of 150+ news sources and media outlets
@@ -230,8 +238,10 @@ export const answerQuery: RequestHandler = (req, res) => {
 • Social media and online reputation analysis
 
 All sources confirm ${memberName} maintains a clean professional record with no compliance concerns identified.`;
-
-  } else if (user_query.toLowerCase().includes('legal') || user_query.toLowerCase().includes('lawsuit')) {
+  } else if (
+    user_query.toLowerCase().includes("legal") ||
+    user_query.toLowerCase().includes("lawsuit")
+  ) {
     answer += `Our comprehensive legal database search for ${memberName} included:
 
 • Federal court system (PACER database)
@@ -242,8 +252,10 @@ All sources confirm ${memberName} maintains a clean professional record with no 
 • Intellectual property disputes
 
 Result: No active or historical legal issues found. ${memberName} has not been named as a defendant in any civil litigation or criminal proceedings in our databases.`;
-
-  } else if (user_query.toLowerCase().includes('work') || user_query.toLowerCase().includes('employment')) {
+  } else if (
+    user_query.toLowerCase().includes("work") ||
+    user_query.toLowerCase().includes("employment")
+  ) {
     answer += `Employment verification for ${memberName} shows:
 
 • Clean employment history with consistent tenure
@@ -253,8 +265,10 @@ Result: No active or historical legal issues found. ${memberName} has not been n
 • No non-compete or employment contract violations
 
 ${memberName}'s professional track record appears exemplary across all positions held.`;
-
-  } else if (user_query.toLowerCase().includes('sources') || user_query.toLowerCase().includes('citations')) {
+  } else if (
+    user_query.toLowerCase().includes("sources") ||
+    user_query.toLowerCase().includes("citations")
+  ) {
     answer += `Our screening utilized ${mockScreeningResults.citations.length} primary sources including:
 
 • Court databases and legal repositories
@@ -264,7 +278,6 @@ ${memberName}'s professional track record appears exemplary across all positions
 • Industry-specific publications
 
 All sources are documented and available for review. The screening process follows GLG's comprehensive due diligence protocols.`;
-
   } else {
     answer += `I can provide detailed information about any aspect of ${memberName}'s screening results:
 
@@ -286,11 +299,14 @@ What specific area would you like me to elaborate on? I have access to the compl
     member_name: memberName,
     response_timestamp: new Date().toISOString(),
     sources_referenced: mockScreeningResults.citations.length,
-    queries_analyzed: mockQueries.length
+    queries_analyzed: mockQueries.length,
   };
 
   // Simulate realistic processing delay
-  setTimeout(() => {
-    res.json(response);
-  }, 800 + Math.random() * 400); // 800-1200ms delay
+  setTimeout(
+    () => {
+      res.json(response);
+    },
+    800 + Math.random() * 400,
+  ); // 800-1200ms delay
 };

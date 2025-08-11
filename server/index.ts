@@ -2,7 +2,13 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
-import { getNMInfo, startScreening, getStatus, getQueries, answerQuery } from "./routes/compliance";
+import {
+  getNMInfo,
+  startScreening,
+  getStatus,
+  getQueries,
+  answerQuery,
+} from "./routes/compliance";
 
 export function createServer() {
   const app = express();
