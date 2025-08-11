@@ -208,26 +208,89 @@ export const getQueries: RequestHandler = (req, res) => {
 
 export const answerQuery: RequestHandler = (req, res) => {
   const { nm_id, user_query } = req.body;
-  
+
   if (!nm_id || !user_query) {
     return res.status(400).json({ error: "Missing nm_id or user_query" });
   }
-  
-  // Mock AI response based on query
-  let answer = "I understand your question about the screening results. ";
-  
+
+  // Get network member info for personalized responses
+  const networkMember = mockNetworkMembers[nm_id];
+  const memberName = networkMember?.name || "the Network Member";
+
+  // Generate comprehensive AI response based on query
+  let answer = `I understand your question about ${memberName}'s screening results. `;
+
   if (user_query.toLowerCase().includes('controversy') || user_query.toLowerCase().includes('negative')) {
-    answer += "Based on our comprehensive screening, no controversies or negative news were found regarding this Network Member. All sources confirm a clean professional record.";
+    answer += `Based on our comprehensive screening of ${memberName}, no controversies or negative news were found. Our analysis included:
+
+• Review of 150+ news sources and media outlets
+• Federal and state court record searches
+• Regulatory database checks (SEC, FDA, FTC, EPA)
+• Professional licensing board reviews
+• Social media and online reputation analysis
+
+All sources confirm ${memberName} maintains a clean professional record with no compliance concerns identified.`;
+
   } else if (user_query.toLowerCase().includes('legal') || user_query.toLowerCase().includes('lawsuit')) {
-    answer += "Our legal database search revealed no lawsuits, legal issues, or pending cases associated with this Network Member.";
+    answer += `Our comprehensive legal database search for ${memberName} included:
+
+• Federal court system (PACER database)
+• State court records across all jurisdictions
+• Bankruptcy filings and proceedings
+• SEC enforcement actions and violations
+• Employment litigation and discrimination cases
+• Intellectual property disputes
+
+Result: No active or historical legal issues found. ${memberName} has not been named as a defendant in any civil litigation or criminal proceedings in our databases.`;
+
   } else if (user_query.toLowerCase().includes('work') || user_query.toLowerCase().includes('employment')) {
-    answer += "The work history verification shows consistent employment at reputable companies with no reported issues or controversies at any of the positions held.";
+    answer += `Employment verification for ${memberName} shows:
+
+• Clean employment history with consistent tenure
+• No termination for cause or misconduct reports
+• No whistleblower complaints or ethics violations
+• All employers contacted confirmed positive standing
+• No non-compete or employment contract violations
+
+${memberName}'s professional track record appears exemplary across all positions held.`;
+
+  } else if (user_query.toLowerCase().includes('sources') || user_query.toLowerCase().includes('citations')) {
+    answer += `Our screening utilized ${mockScreeningResults.citations.length} primary sources including:
+
+• Court databases and legal repositories
+• Financial news and business publications
+• Regulatory agency databases
+• Professional association records
+• Industry-specific publications
+
+All sources are documented and available for review. The screening process follows GLG's comprehensive due diligence protocols.`;
+
   } else {
-    answer += "Could you please be more specific about what aspect of the screening results you'd like me to clarify? I can provide details about legal issues, work history, or any negative news findings.";
+    answer += `I can provide detailed information about any aspect of ${memberName}'s screening results:
+
+• Legal Issues & Litigation History
+• Regulatory Compliance & Violations
+• Media Coverage & Public Reputation
+• Employment & Professional Standing
+• Financial Misconduct & Fraud
+• Industry-Specific Concerns
+
+What specific area would you like me to elaborate on? I have access to the complete screening report and can provide detailed analysis.`;
   }
-  
-  // Simulate some processing delay
+
+  // Add metadata to response for debugging
+  const response = {
+    answer,
+    query_processed: user_query,
+    nm_id: nm_id,
+    member_name: memberName,
+    response_timestamp: new Date().toISOString(),
+    sources_referenced: mockScreeningResults.citations.length,
+    queries_analyzed: mockQueries.length
+  };
+
+  // Simulate realistic processing delay
   setTimeout(() => {
-    res.json({ answer });
-  }, 1000);
+    res.json(response);
+  }, 800 + Math.random() * 400); // 800-1200ms delay
 };
