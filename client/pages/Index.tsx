@@ -456,8 +456,8 @@ export default function Index() {
                 </div>
 
                 <div className="text-center text-gray-500 text-sm">
-                  <p>Phase 1: Negative News & Escalation screening is now available.</p>
-                  <p>Identity Verification and Work History modules coming in future phases.</p>
+                  <p>Negative News & Escalation screening is now available.</p>
+                  <p>Identity Verification and Work History modules coming soon.</p>
                 </div>
               </div>
             )}
