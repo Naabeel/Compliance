@@ -20,5 +20,12 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
+  // Compliance API routes
+  app.get("/api/get_nm_info/:nm_id", getNMInfo);
+  app.get("/api/start_screening", startScreening);
+  app.get("/api/status/:nm_id", getStatus);
+  app.get("/api/queries/:nm_id", getQueries);
+  app.post("/api/answer_query", answerQuery);
+
   return app;
 }
