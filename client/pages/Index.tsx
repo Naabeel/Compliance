@@ -617,7 +617,7 @@ export default function Index() {
 
         {/* Chat Sidebar - Fixed Height */}
         {showChat && (
-          <div className="w-80 bg-white border-l shadow-lg flex flex-col h-screen">
+          <div className="w-80 bg-white border-l shadow-lg flex flex-col h-[calc(100vh-80px)]">
             <div className="p-4 border-b bg-compliance-header text-white flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Chat with Agent</h3>
