@@ -1,72 +1,248 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, ExternalLink, Search, UserCheck, FileText, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Search, ExternalLink, MessageSquare, Edit, Send, Loader2 } from "lucide-react";
 
-// Mock data for Network Member
-const networkMemberData = {
-  id: "35117",
-  name: "Michael Bartikoski",
-  country: "United States",
-  region: "North America",
-  councilName: "Consumer Goods & Services",
-  linkedIn: "https://www.linkedin.com/in/michael-bartikoski-12345",
-  biography: "Michael Bartikoski is an executive in the food and beverage industry and is currently serving as COO for CraftMark Bakery, LLC - prior to that he was COO at Diamond Crystal Brands. He was also an interim executive for Rialto Banking Company serving as their VP of Operations.",
-  workHistory: [
-    {
-      companyName: "The Hershey Company",
-      jobTitle: "VP, Global Manufacturing & Alliances",
-      period: "2018-2023"
-    },
-    {
-      companyName: "Diamond Crystal Brands",
-      jobTitle: "COO",
-      period: "2015-2018"
-    },
-    {
-      companyName: "Coca-Cola Europacific Partners API Pty Ltd",
-      jobTitle: "Director, National Business Development",
-      period: "2012-2015"
-    }
-  ]
-};
+// Types
+interface NetworkMember {
+  name: string;
+  biography: string;
+  practice_area: string;
+  council_name: string;
+  country: string;
+  linkedin_url: string;
+  work_history: Array<{
+    company: string;
+    title: string;
+    period: string;
+  }>;
+}
 
-// Mock negative news citations
-const negativeNewsCitations = [
-  "https://www.beverage-secretions.com/tag/?utm_source=copilot",
-  "https://www.beverage.co.uk/newsector/10-43-33072?utm_source=copilot",
-  "https://www.dailymail.co.uk/news/article-4450172?utm_source=copilot",
-  "https://case-law.vlex.com/vid/685221107?utm_source=copilot",
-  "https://finance.yahoo.com/news/diamond-crystal-brands-announces-dc-partners-dc-announce-resignation-of-chief-financial-officer?utm_source=copilot",
-  "https://naamloosc.com/name-parties-explained-attorney-clients-or-101?utm_source=copilot"
-];
+interface ScreeningStatus {
+  nm_id: string;
+  status: string;
+  results?: {
+    summary: string;
+    citations: string[];
+  };
+}
 
-// Mock generated queries
-const generatedQueries = [
-  '"Michael Bartikoski" lawsuit United States news',
-  '"Michael Bartikoski" fraud investigation federal crime in the food and beverage industry?',
-  '"Michael Bartikoski" arrest for any controversy?',
-  'Any legal issues involving "Michael Bartikoski" at Diamond Crystal Brands',
-  '"Michael Bartikoski" fined by employees or partners at The Hershey Company',
-  '"Michael Bartikoski" has pending criminal charges in the United States',
-  '"Michael Bartikoski" fined for violations at Land O\' Frost operations',
-  'Were there any scandals involving "Michael Bartikoski" at The Hershey Company?',
-  'Was there fraud or corruption involving "Michael Bartikoski"?',
-  'Has "Michael Bartikoski" faced any malpractice allegations as COO at Roskam Foods?',
-  '"Michael Bartikoski" prosecution or investigation in relation to his executive roles'
-];
+interface ChatMessage {
+  type: 'user' | 'agent';
+  message: string;
+  timestamp: Date;
+}
+
+// App States
+type AppState = 'search' | 'details' | 'screening' | 'results';
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState("negative-news");
+  // State management
+  const [currentState, setCurrentState] = useState<AppState>('search');
+  const [nmId, setNmId] = useState('');
+  const [networkMember, setNetworkMember] = useState<NetworkMember | null>(null);
+  const [screeningStatus, setScreeningStatus] = useState<ScreeningStatus | null>(null);
+  const [queries, setQueries] = useState<string[]>([]);
   const [showCitations, setShowCitations] = useState(false);
   const [showQueries, setShowQueries] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [polling, setPolling] = useState(false);
+  
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const handleStartConversation = () => {
-    // This would initiate AI conversation for further investigation
-    console.log("Starting AI conversation for further investigation");
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // API Functions
+  const findNetworkMember = async () => {
+    if (!nmId.trim()) {
+      setError('Please enter a Network Member ID');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch(`/api/get_nm_info/${nmId}`);
+      
+      if (!response.ok) {
+        throw new Error('Network Member not found');
+      }
+      
+      const data = await response.json();
+      setNetworkMember(data);
+      setCurrentState('details');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to find Network Member');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startScreening = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch('/api/start_screening');
+      
+      if (!response.ok) {
+        throw new Error('Failed to start screening');
+      }
+      
+      const data = await response.json();
+      
+      if (data.nm_id) {
+        setCurrentState('screening');
+        startPolling(data.nm_id);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start screening');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startPolling = (pollNmId: string) => {
+    setPolling(true);
+    
+    const poll = async () => {
+      try {
+        const response = await fetch(`/api/status/${pollNmId}`);
+        const data = await response.json();
+        
+        setScreeningStatus(data);
+        
+        if (data.status.toLowerCase() === 'completed') {
+          setPolling(false);
+          setCurrentState('results');
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+          }
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    };
+
+    // Initial poll
+    poll();
+    
+    // Set up interval
+    pollIntervalRef.current = setInterval(poll, 3000); // Poll every 3 seconds
+  };
+
+  const loadQueries = async () => {
+    if (!nmId) return;
+    
+    try {
+      const response = await fetch(`/api/queries/${nmId}`);
+      const data = await response.json();
+      setQueries(data.queries || []);
+      setShowQueries(true);
+    } catch (err) {
+      setError('Failed to load queries');
+    }
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim() || !nmId) return;
+
+    const userMessage: ChatMessage = {
+      type: 'user',
+      message: chatInput,
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    
+    try {
+      const response = await fetch('/api/answer_query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nm_id: nmId,
+          user_query: chatInput
+        })
+      });
+      
+      const data = await response.json();
+      
+      const agentMessage: ChatMessage = {
+        type: 'agent',
+        message: data.answer || 'I apologize, but I could not process your request.',
+        timestamp: new Date()
+      };
+      
+      setChatMessages(prev => [...prev, agentMessage]);
+    } catch (err) {
+      const errorMessage: ChatMessage = {
+        type: 'agent',
+        message: 'Sorry, I encountered an error while processing your request.',
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const goBack = () => {
+    if (currentState === 'details') {
+      setCurrentState('search');
+      setNetworkMember(null);
+      setError('');
+    } else if (currentState === 'screening' || currentState === 'results') {
+      setCurrentState('details');
+      setScreeningStatus(null);
+      setQueries([]);
+      setShowCitations(false);
+      setShowQueries(false);
+      setShowChat(false);
+      setChatMessages([]);
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    }
+  };
+
+  const resetToSearch = () => {
+    setCurrentState('search');
+    setNmId('');
+    setNetworkMember(null);
+    setScreeningStatus(null);
+    setQueries([]);
+    setShowCitations(false);
+    setShowQueries(false);
+    setShowChat(false);
+    setChatMessages([]);
+    setError('');
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
   };
 
   return (
@@ -76,227 +252,206 @@ export default function Index() {
         <div className="px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 lg:space-x-4">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 text-xs lg:text-sm">
-                <ArrowLeft className="h-4 w-4 mr-1 lg:mr-2" />
-                <span className="hidden sm:inline">Click to go back, hold to see history</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
+              {currentState !== 'search' && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-white hover:bg-white/10" 
+                  onClick={goBack}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+              )}
             </div>
-            <h1 className="text-lg lg:text-xl font-semibold text-center">Negative News Screening Agent</h1>
-            <div className="w-16 lg:w-32"></div> {/* Spacer for balance */}
+            <h1 className="text-lg lg:text-xl font-semibold text-center cursor-pointer" onClick={resetToSearch}>
+              GLG Compliance Agent
+            </h1>
+            <div className="w-16 lg:w-32"></div>
           </div>
         </div>
       </header>
 
-      <div className="flex flex-col lg:flex-row">
-        {/* Sidebar - Network Member Details */}
-        <aside className="w-full lg:w-80 bg-compliance-sidebar border-r border-gray-200 lg:min-h-screen">
-          <div className="p-4 lg:p-6">
-            <div className="space-y-6">
-              {/* NM Details Header */}
-              <div>
-                <h2 className="text-lg font-semibold text-compliance-sidebar-foreground mb-4">NM details</h2>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">ID</span>
-                    <p className="text-sm text-gray-900">{networkMemberData.id}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Name</span>
-                    <p className="text-sm text-gray-900">{networkMemberData.name}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Country</span>
-                    <p className="text-sm text-gray-900">{networkMemberData.country}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Region</span>
-                    <p className="text-sm text-gray-900">{networkMemberData.region}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Council Name</span>
-                    <p className="text-sm text-gray-900">{networkMemberData.councilName}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">LinkedIn</span>
-                    <a 
-                      href={networkMemberData.linkedIn} 
-                      className="text-sm text-compliance-accent hover:underline flex items-center"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View Profile <ExternalLink className="h-3 w-3 ml-1" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Biography */}
-              <div>
-                <h3 className="text-sm font-semibold text-compliance-sidebar-foreground mb-2">Biography</h3>
-                <p className="text-xs text-gray-700 leading-relaxed">{networkMemberData.biography}</p>
-              </div>
-
-              {/* Work History */}
-              <div>
-                <h3 className="text-sm font-semibold text-compliance-sidebar-foreground mb-2">Work History</h3>
-                <div className="space-y-3">
-                  {networkMemberData.workHistory.map((job, index) => (
-                    <div key={index} className="border-l-2 border-gray-200 pl-3">
-                      <div>
-                        <span className="text-xs font-medium text-gray-600">Company Name</span>
-                        <p className="text-xs text-gray-900">{job.companyName}</p>
-                      </div>
-                      <div className="mt-1">
-                        <span className="text-xs font-medium text-gray-600">Job Title</span>
-                        <p className="text-xs text-gray-900">{job.jobTitle}</p>
-                      </div>
-                      <div className="mt-1">
-                        <span className="text-xs text-gray-600">{job.period}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
-
+      <div className="flex">
         {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-6">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-xl lg:text-2xl font-semibold text-compliance-header mb-4 lg:mb-6">
-              Screening Results for {networkMemberData.name}
-            </h2>
-
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="identity" className="flex items-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
-                  <UserCheck className="h-3 w-3 lg:h-4 lg:w-4" />
-                  <span className="hidden sm:inline">Identity Verification</span>
-                  <span className="sm:hidden">Identity</span>
-                </TabsTrigger>
-                <TabsTrigger value="work-history" className="flex items-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
-                  <FileText className="h-3 w-3 lg:h-4 lg:w-4" />
-                  <span className="hidden sm:inline">Work History</span>
-                  <span className="sm:hidden">Work</span>
-                </TabsTrigger>
-                <TabsTrigger value="negative-news" className="flex items-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
-                  <AlertTriangle className="h-3 w-3 lg:h-4 lg:w-4" />
-                  <span className="hidden sm:inline">Negative News</span>
-                  <span className="sm:hidden">News</span>
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Identity Verification Tab */}
-              <TabsContent value="identity">
-                <Card>
+        <main className={`${showChat ? 'flex-1' : 'w-full'} p-4 lg:p-6 transition-all duration-300`}>
+          <div className="max-w-4xl mx-auto">
+            
+            {/* Search Screen */}
+            {currentState === 'search' && (
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <Card className="w-full max-w-md">
                   <CardHeader>
-                    <CardTitle>Identity Verification Results</CardTitle>
+                    <CardTitle className="text-center">Find Network Member</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-center h-64 text-gray-500">
-                      <div className="text-center">
-                        <UserCheck className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                        <p>Identity verification data will be available in future phases.</p>
-                        <p className="text-sm mt-2">This section will contain identity verification results and confidence scores.</p>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nm_id">Network Member ID</Label>
+                      <Input
+                        id="nm_id"
+                        value={nmId}
+                        onChange={(e) => setNmId(e.target.value)}
+                        placeholder="Enter NM ID..."
+                        onKeyPress={(e) => e.key === 'Enter' && findNetworkMember()}
+                      />
+                    </div>
+                    {error && (
+                      <p className="text-sm text-red-600">{error}</p>
+                    )}
+                    <Button 
+                      onClick={findNetworkMember} 
+                      disabled={loading}
+                      className="w-full bg-compliance-header hover:bg-compliance-accent"
+                    >
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4 mr-2" />
+                      )}
+                      Find NM
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Network Member Details Screen */}
+            {currentState === 'details' && networkMember && (
+              <div className="space-y-6">
+                <h2 className="text-xl lg:text-2xl font-semibold text-compliance-header">
+                  Network Member Details
+                </h2>
+                
+                <Card>
+                  <CardContent className="p-6 space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Name</Label>
+                      <p className="text-lg font-semibold">{networkMember.name}</p>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Biography</Label>
+                      <p className="text-sm text-gray-700">
+                        {networkMember.biography.length > 200 
+                          ? `${networkMember.biography.substring(0, 200)}...` 
+                          : networkMember.biography}
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600">Practice Area</Label>
+                        <p className="text-sm">{networkMember.practice_area}</p>
                       </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600">Council Name</Label>
+                        <p className="text-sm">{networkMember.council_name}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600">Country</Label>
+                        <p className="text-sm">{networkMember.country}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600">LinkedIn</Label>
+                        <a 
+                          href={networkMember.linkedin_url} 
+                          className="text-sm text-compliance-accent hover:underline flex items-center"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Profile <ExternalLink className="h-3 w-3 ml-1" />
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600 mb-2 block">Work History</Label>
+                      <div className="space-y-2">
+                        {networkMember.work_history.slice(0, 3).map((job, index) => (
+                          <div key={index} className="border-l-2 border-gray-200 pl-3">
+                            <p className="text-sm font-medium">{job.company}</p>
+                            <p className="text-xs text-gray-600">{job.title} • {job.period}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <Button 
+                        onClick={startScreening}
+                        disabled={loading}
+                        className="w-full bg-compliance-header hover:bg-compliance-accent"
+                      >
+                        {loading ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
+                        Start Screening
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+            )}
 
-              {/* Work History Tab */}
-              <TabsContent value="work-history">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Work History Verification</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-center h-64 text-gray-500">
-                      <div className="text-center">
-                        <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                        <p>Work history verification data will be available in future phases.</p>
-                        <p className="text-sm mt-2">This section will contain employment verification and validation results.</p>
-                      </div>
-                    </div>
+            {/* Screening in Progress Screen */}
+            {currentState === 'screening' && (
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <Card className="w-full max-w-md">
+                  <CardContent className="p-6 text-center space-y-4">
+                    <Loader2 className="h-12 w-12 mx-auto animate-spin text-compliance-header" />
+                    <h3 className="text-lg font-semibold">Screening in Progress</h3>
+                    <p className="text-sm text-gray-600">
+                      {screeningStatus?.status || 'Initializing screening...'}
+                    </p>
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+            )}
 
-              {/* Negative News Tab */}
-              <TabsContent value="negative-news" className="space-y-6">
-                {/* Action Buttons */}
+            {/* Results Screen */}
+            {currentState === 'results' && screeningStatus?.results && (
+              <div className="space-y-6">
+                <h2 className="text-xl lg:text-2xl font-semibold text-compliance-header">
+                  Screening Results for {networkMember?.name}
+                </h2>
+
+                {/* Action Buttons - Single Set */}
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowQueries(!showQueries)}
-                    className="flex items-center justify-center space-x-2 text-sm"
+                  <Button 
+                    variant="outline" 
+                    onClick={loadQueries}
+                    className="flex items-center justify-center space-x-2"
                   >
                     <Search className="h-4 w-4" />
-                    <span>View Generated Queries</span>
+                    <span>View Queries</span>
                   </Button>
-                  <Button
-                    variant="outline"
+                  <Button 
+                    variant="outline" 
                     onClick={() => setShowCitations(!showCitations)}
-                    className="flex items-center justify-center space-x-2 text-sm"
+                    className="flex items-center justify-center space-x-2"
                   >
                     <ExternalLink className="h-4 w-4" />
                     <span>View Citations</span>
                   </Button>
-                  <Button
-                    onClick={handleStartConversation}
-                    className="bg-compliance-header hover:bg-compliance-accent text-white text-sm"
+                  <Button 
+                    onClick={() => setShowChat(!showChat)}
+                    className="bg-compliance-header hover:bg-compliance-accent text-white flex items-center justify-center space-x-2"
                   >
-                    Start a Conversation
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Start a Conversation</span>
                   </Button>
                 </div>
 
-                {/* Generated Queries Modal */}
-                {showQueries && (
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle>Generated Queries</CardTitle>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setShowQueries(false)}
-                      >
-                        ×
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-64">
-                        <div className="space-y-2">
-                          {generatedQueries.map((query, index) => (
-                            <div key={index} className="p-2 bg-gray-50 rounded text-sm">
-                              • {query}
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Citations Modal */}
+                {/* Citations */}
                 {showCitations && (
                   <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader>
                       <CardTitle>Citations</CardTitle>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setShowCitations(false)}
-                      >
-                        ×
-                      </Button>
                     </CardHeader>
                     <CardContent>
                       <ScrollArea className="h-64">
                         <div className="space-y-2">
-                          {negativeNewsCitations.map((citation, index) => (
+                          {screeningStatus.results.citations.map((citation, index) => (
                             <div key={index} className="p-2 bg-gray-50 rounded">
                               <a 
                                 href={citation} 
@@ -314,75 +469,111 @@ export default function Index() {
                   </Card>
                 )}
 
+                {/* Queries */}
+                {showQueries && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Generated Queries</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-64">
+                        <div className="space-y-2">
+                          {queries.map((query, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                              <span className="text-sm">• {query}</span>
+                              <Button variant="outline" size="sm">
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Screening Summary */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Screening Summary</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="bg-green-100 rounded-full p-2">
-                          <UserCheck className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-green-800 mb-2">
-                            No Negative News or Legal Issues Found Regarding {networkMemberData.name}
-                          </h3>
-                          <p className="text-sm text-green-700 mb-4">
-                            After a comprehensive review of public records, news databases, and legal sources, there is no evidence of any lawsuits, 
-                            controversies, scandals, or legal issues involving {networkMemberData.name}. Searches covered his tenures at CraftMark Bakery, 
-                            Diamond Crystal Brands, Rialto Banking Company, Summit Foods, The Hershey Company, PepsiCo, Quaker Oats, E. & J. Gallo Winery, and other notable 
-                            organizations he has worked for and beverage industry positions.
-                          </p>
-                          <p className="text-sm text-green-700 mb-4">
-                            All sources confirm that {networkMemberData.name} has maintained a professional reputation, with no public reports of criminal activity, 
-                            malpractice, fraud, employee lawsuits, or any other negative incidents associated with his name. Any legal cases or 
-                            controversies identified in the search pertained to companies he worked for, but not to Bartikoski personally, and often 
-                            occurred outside his tenure or without his involvement.
-                          </p>
-                          <div className="bg-white border border-green-200 rounded p-3">
-                            <p className="text-sm font-medium text-green-800 mb-2">Conclusion:</p>
-                            <p className="text-sm text-green-700">
-                              Extensive searches across multiple reputable sources revealed no negative news, legal actions, or controversies involving 
-                              {networkMemberData.name}.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons in Summary */}
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowQueries(!showQueries)}
-                        className="flex items-center justify-center space-x-2 text-sm"
-                      >
-                        <Search className="h-4 w-4" />
-                        <span>View Generated Queries</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowCitations(!showCitations)}
-                        className="flex items-center justify-center space-x-2 text-sm"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>View Citations</span>
-                      </Button>
-                      <Button
-                        onClick={handleStartConversation}
-                        className="bg-compliance-header hover:bg-compliance-accent text-white text-sm"
-                      >
-                        Start a Conversation
-                      </Button>
-                    </div>
+                  <CardContent>
+                    <div 
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: screeningStatus.results.summary }}
+                    />
                   </CardContent>
                 </Card>
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
+
+            {error && currentState !== 'search' && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
           </div>
         </main>
+
+        {/* Chat Sidebar */}
+        {showChat && (
+          <div className="w-80 bg-white border-l shadow-lg flex flex-col">
+            <div className="p-4 border-b bg-compliance-header text-white">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Chat with Agent</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-white hover:bg-white/10"
+                  onClick={() => setShowChat(false)}
+                >
+                  ×
+                </Button>
+              </div>
+            </div>
+            
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {chatMessages.length === 0 && (
+                  <div className="text-center text-gray-500 text-sm">
+                    Ask me anything about {networkMember?.name}'s screening results.
+                  </div>
+                )}
+                {chatMessages.map((msg, index) => (
+                  <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                      msg.type === 'user' 
+                        ? 'bg-compliance-header text-white' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {msg.message}
+                    </div>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
+            </ScrollArea>
+            
+            <div className="p-4 border-t">
+              <div className="flex space-x-2">
+                <Input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Type your question..."
+                  onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
+                />
+                <Button 
+                  onClick={sendChatMessage}
+                  disabled={!chatInput.trim()}
+                  size="sm"
+                  className="bg-compliance-header hover:bg-compliance-accent"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
